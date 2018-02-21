@@ -1,3 +1,6 @@
+## This script generates EVI2 GeoTIFF for each image in the ARD stack
+## Still working on topographic correction component (need to modify for each LC)
+
 require(raster)
 require(rgdal)
 require(gdalUtils)
@@ -14,44 +17,47 @@ registerDoParallel(2)
 
 source(file='/usr3/graduate/emelaas/Code/R/landsat_sentinel/v1_3/topocorr_v2.R')
 
-# tile_name <- 'h22v15'
-#
-# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/')
-#
+tile_name <- 'h21v15'
+
+setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
+
 # ## GENERATE ARD TILE AND SAVE TO DIRECTORY
 # ard_tiles <- readOGR('/projectnb/modislc/projects/landsat_sentinel/ARD/CONUS_ARD_grid/',
 #   'conus_ard_grid')
-# tile <- ard_tiles[which(ard_tiles$h==22 & ard_tiles$v==15),]
+# tile <- ard_tiles[which(ard_tiles$h==21 & ard_tiles$v==15),]
+# # Determine lat/lon extent of tile for NED download
+# tile_latlon <- spTransform(tile,CRS("+proj=longlat +datum=WGS84"))
+# extent(tile_latlon)
 # tile_proj <- spTransform(tile,CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"))
 # writeOGR(tile_proj,paste(getwd(),'/','SHP',sep=''),
 #   tile_name,driver="ESRI Shapefile",overwrite=TRUE)
-#
+# 
 # ## GENERATE DEM MOSAIC AND CLIP TO ARD TILE
 # # Specify a for loop to create a list object, containing raster objects
-# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/DEM')
+# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM')
 # rasters1 <- list.files(path=getwd(),pattern=glob2rx("*img"),
 #   full.names=T,include.dirs=T,recursive=T)
 # rast.list <- list()
 # for(i in 1:length(rasters1)) { rast.list[i] <- raster(rasters1[i]) }
-#
+# 
 # # Create mosaic using do.call on the list of raster objects
 # rast.list$fun <- mean
 # rast.mosaic <- do.call(mosaic,rast.list)
 # writeRaster(rast.mosaic,filename=paste(getwd(),'/mosaic',sep=""),
 #   format='GTiff',overwrite=TRUE)
-#
-# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/SHP')
-# DEM <- gdalwarp('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/DEM/mosaic.tif',
-#   dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/DEM/mosaic_tile.tif',
+# 
+# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/SHP')
+# DEM <- gdalwarp('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM/mosaic.tif',
+#   dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM/mosaic_tile.tif',
 #   t_srs=projection(tile_proj),ts=c(5000,5000),
 #   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
 #   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
-#
+# 
 # slope <- terrain(DEM,opt='slope',unit='degrees')
 # aspect <- terrain(DEM,opt='aspect',unit='degrees')
-#
+# 
 # src_data2 <- '/projectnb/modislc/data/lc_database/regional/united_states/NLCD2006_landcover_4-20-11_se5/nlcd2006_landcover_4-20-11_se5.img'
-# LC <- gdalwarp(src_data2,dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/NLCD/nlcd.tif',
+# LC <- gdalwarp(src_data2,dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/NLCD/nlcd.tif',
 #   t_srs=projection(tile_proj),ts=c(5000,5000),
 #   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
 #   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
@@ -59,7 +65,7 @@ source(file='/usr3/graduate/emelaas/Code/R/landsat_sentinel/v1_3/topocorr_v2.R')
 
 # LOAD IN SURFACE REFLECTANCE BANDS, QA LAYER, SOLAR ZENITH & AZIMUTH
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/')
+setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/IMG')
 in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),
   full.names=T,include.dirs=T)
 
@@ -67,12 +73,12 @@ all_count <- foreach(i = 1:length(in_dirs), .combine = rbind) %dopar% {
   print(i)
 
   # Landsat 8
-  if (substr(in_dirs[i],60,60)==8){
-    nir <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+  if (substr(in_dirs[i],64,64)==8){
+    nir <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_SRB5.tif',sep='')) # near infrared reflectance
-    red <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+    red <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_SRB4.tif',sep='')) # red reflectance
-    QA <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+    QA <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_PIXELQA.tif',sep='')) # pixel QA
 
     s <- stack(red,nir,QA)
@@ -85,11 +91,11 @@ all_count <- foreach(i = 1:length(in_dirs), .combine = rbind) %dopar% {
 
     # Landsat 4-7
   } else {
-    nir <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+    nir <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_SRB4.tif',sep='')) # near infrared reflectance
-    red <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+    red <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_SRB3.tif',sep='')) # red reflectance
-    QA <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],57,88),
+    QA <- raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
       '_C01_V01_PIXELQA.tif',sep='')) # pixel QA
 
     s <- stack(red,nir,QA)
