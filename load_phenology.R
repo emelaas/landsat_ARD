@@ -1,9 +1,12 @@
 library(rgdal)
 library(raster)
 
-img <- raster('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/LC08_CU_022015_20130415_20170803/evi2.tif')
+tile_name <- 'h20v15'
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/PHENO')
+img <- raster(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
+  tile_name,'/DEM/mosaic_tile.tif',sep=''))
+
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO',sep=''))
 tmp_files <- list.files(pattern = "evi2_phenology*", recursive = TRUE,full.names = TRUE)
 chunk <- unlist(lapply(tmp_files, 
   function(x) na.omit(as.numeric(unlist(strsplit(unlist(x), "[^0-9]+"))))[2]))
@@ -31,8 +34,8 @@ for (k in 1:4){
   print(k)
   s <- setValues(img,phen[,k])
   name <- paste(names[k],'.tif',sep="")
-  writeRaster(s,filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/MAPS/',
-    name,sep=""),format='GTiff',overwrite=TRUE)
+  writeRaster(s,filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
+    tile_name,'/MAPS/',name,sep=""),format='GTiff',overwrite=TRUE)
 }
 
 names <- c('spr2012anom')
@@ -40,6 +43,6 @@ for (k in 1:1){
   print(k)
   s <- setValues(img,spr_anom[,k])
   name <- paste(names[k],'.tif',sep="")
-  writeRaster(s,filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/MAPS/',
-    name,sep=""),format='GTiff',overwrite=TRUE)
+  writeRaster(s,filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
+    tile_name,'/MAPS/',name,sep=""),format='GTiff',overwrite=TRUE)
 }

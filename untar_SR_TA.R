@@ -3,9 +3,9 @@ library(iterators)
 library(doParallel)
 
 #Register the parallel backend
-registerDoParallel(1)
+registerDoParallel(16)
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
+setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h18v15/')
 
 dir.create(paste(getwd(),'/DEM/',sep=''))
 dir.create(paste(getwd(),'/IMG/',sep=''))

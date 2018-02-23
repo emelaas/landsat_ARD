@@ -17,6 +17,10 @@ chunk = as.numeric(args[1])
 
 #chunk <- 1
 
+H <- 20
+V <- 15
+tile_name <- paste('h',H,'v',V,sep='')
+
 #Register the parallel backend
 registerDoParallel(16)
 
@@ -46,7 +50,7 @@ pheno_pars <- list(
 
 system.time({
   #Find all images for each site
-  setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/')
+  setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',sep=''))
   in_dirs_tile <- list.files(path=getwd(),pattern=glob2rx("evi2.tif"),full.names=T,include.dirs=T,recursive=TRUE)
   
   r <- stack(in_dirs_tile)
@@ -55,9 +59,9 @@ system.time({
   vi_vals[vi_vals<=0] <- NA
   
   #Generate index of ancillary info for all images
-  doy <- yday(ymd(substring(in_dirs_tile,72,79)))
-  yr <- as.numeric(substring(in_dirs_tile,72,75))
-  sat <- substring(in_dirs_tile,60,60)
+  doy <- yday(ymd(substring(in_dirs_tile,76,83)))
+  yr <- as.numeric(substring(in_dirs_tile,76,79))
+  sat <- substring(in_dirs_tile,64,64)
   
   index <- data.frame(sat,yr,doy,t(vi_vals))
   colnames(index) <- c('sat','yr','doy','vi')
@@ -95,6 +99,6 @@ system.time({
   
   all_pheno[all_pheno==0] <- NA
   
-  setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h22v15/PHENO')
+  setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO',sep=''))
   save(all_pheno,file=paste('evi2_phenology_',chunk,sep=""))
 })

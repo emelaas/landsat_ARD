@@ -13,18 +13,20 @@ library(doParallel)
 library(landsat)
 
 #Register the parallel backend
-registerDoParallel(2)
+registerDoParallel(16)
 
 source(file='/usr3/graduate/emelaas/Code/R/landsat_sentinel/v1_3/topocorr_v2.R')
 
-tile_name <- 'h21v15'
+H <- 20
+V <- 15
+tile_name <- paste('h',H,'v',V,sep='')
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',sep=''))
 
 # ## GENERATE ARD TILE AND SAVE TO DIRECTORY
 # ard_tiles <- readOGR('/projectnb/modislc/projects/landsat_sentinel/ARD/CONUS_ARD_grid/',
 #   'conus_ard_grid')
-# tile <- ard_tiles[which(ard_tiles$h==21 & ard_tiles$v==15),]
+# tile <- ard_tiles[which(ard_tiles$h==H & ard_tiles$v==V),]
 # # Determine lat/lon extent of tile for NED download
 # tile_latlon <- spTransform(tile,CRS("+proj=longlat +datum=WGS84"))
 # extent(tile_latlon)
@@ -34,7 +36,7 @@ setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
 # 
 # ## GENERATE DEM MOSAIC AND CLIP TO ARD TILE
 # # Specify a for loop to create a list object, containing raster objects
-# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM')
+# setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/DEM',sep=''))
 # rasters1 <- list.files(path=getwd(),pattern=glob2rx("*img"),
 #   full.names=T,include.dirs=T,recursive=T)
 # rast.list <- list()
@@ -46,9 +48,9 @@ setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
 # writeRaster(rast.mosaic,filename=paste(getwd(),'/mosaic',sep=""),
 #   format='GTiff',overwrite=TRUE)
 # 
-# setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/SHP')
-# DEM <- gdalwarp('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM/mosaic.tif',
-#   dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/DEM/mosaic_tile.tif',
+# setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/SHP',sep=''))
+# DEM <- gdalwarp(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/DEM/mosaic.tif',sep=''),
+#   dstfile=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/DEM/mosaic_tile.tif',sep=''),
 #   t_srs=projection(tile_proj),ts=c(5000,5000),
 #   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
 #   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
@@ -57,7 +59,7 @@ setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
 # aspect <- terrain(DEM,opt='aspect',unit='degrees')
 # 
 # src_data2 <- '/projectnb/modislc/data/lc_database/regional/united_states/NLCD2006_landcover_4-20-11_se5/nlcd2006_landcover_4-20-11_se5.img'
-# LC <- gdalwarp(src_data2,dstfile='/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/NLCD/nlcd.tif',
+# LC <- gdalwarp(src_data2,dstfile=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/NLCD/nlcd.tif',sep=''),
 #   t_srs=projection(tile_proj),ts=c(5000,5000),
 #   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
 #   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
@@ -65,7 +67,7 @@ setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/')
 
 # LOAD IN SURFACE REFLECTANCE BANDS, QA LAYER, SOLAR ZENITH & AZIMUTH
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h21v15/IMG')
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/IMG',sep=''))
 in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),
   full.names=T,include.dirs=T)
 
