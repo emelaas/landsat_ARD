@@ -10,42 +10,19 @@ library(RColorBrewer)
 require(data.table)
 library(lubridate)
 
+#Register the parallel backend
+registerDoParallel(16)
+
 source(file='/usr3/graduate/emelaas/Code/GitHub/landsat_ARD/landsat_pheno_pixel.R')
 
 args = commandArgs(trailingOnly=T)
 chunk = as.numeric(args[1])
-
 #chunk <- 1
 
 H <- 20
-V <- 15
+V <- 14
 tile_name <- paste('h',H,'v',V,sep='')
 
-#Register the parallel backend
-registerDoParallel(16)
-
-comb <- function(x, ...) {
-  lapply(seq_along(x),
-    function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
-}
-
-pheno_pars <- list(
-  LandsatFillQuant=0.05,
-  LandsatXmin=0,
-  LandsatSpikeThresh=2,
-  LandsatMinResid=0.1,
-  LandsatFillDOY=NULL,
-  LandsatDoAnnual=T,
-  LandsatPadHeadTail=T,
-  min_peak_to_peak_distance=50,
-  min_peak_quantile=0.2,
-  max_seg_length=200,
-  min_seg_amplitude=0.00,
-  agg_amp_frac=0.15,
-  gup_threshes=c(0.1,0.5,0.9),
-  gdown_threshes=c(0.9,0.5,0.1),
-  spline_spar=0.5
-)
 #---------------------------------------------------------------------
 
 system.time({

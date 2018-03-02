@@ -17,23 +17,27 @@ registerDoParallel(16)
 
 source(file='/usr3/graduate/emelaas/Code/R/landsat_sentinel/v1_3/topocorr_v2.R')
 
-H <- 20
-V <- 15
-tile_name <- paste('h',H,'v',V,sep='')
+# args = commandArgs(trailingOnly=T) 
+# tile_name = args[1]  
+
+
+tile_name <- 'h17v15'
+H <- as.numeric(substring(tile_name,2,3))
+V <- as.numeric(substring(tile_name,5,6))
 
 setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',sep=''))
 
-# ## GENERATE ARD TILE AND SAVE TO DIRECTORY
-# ard_tiles <- readOGR('/projectnb/modislc/projects/landsat_sentinel/ARD/CONUS_ARD_grid/',
-#   'conus_ard_grid')
-# tile <- ard_tiles[which(ard_tiles$h==H & ard_tiles$v==V),]
-# # Determine lat/lon extent of tile for NED download
-# tile_latlon <- spTransform(tile,CRS("+proj=longlat +datum=WGS84"))
-# extent(tile_latlon)
-# tile_proj <- spTransform(tile,CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"))
-# writeOGR(tile_proj,paste(getwd(),'/','SHP',sep=''),
-#   tile_name,driver="ESRI Shapefile",overwrite=TRUE)
-# 
+## GENERATE ARD TILE AND SAVE TO DIRECTORY
+ard_tiles <- readOGR('/projectnb/modislc/projects/landsat_sentinel/ARD/CONUS_ARD_grid/',
+  'conus_ard_grid')
+tile <- ard_tiles[which(ard_tiles$h==H & ard_tiles$v==V),]
+# Determine lat/lon extent of tile for NED download
+tile_latlon <- spTransform(tile,CRS("+proj=longlat +datum=WGS84"))
+extent(tile_latlon)
+tile_proj <- spTransform(tile,CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+writeOGR(tile_proj,paste(getwd(),'/','SHP',sep=''),
+  tile_name,driver="ESRI Shapefile",overwrite=TRUE)
+
 # ## GENERATE DEM MOSAIC AND CLIP TO ARD TILE
 # # Specify a for loop to create a list object, containing raster objects
 # setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/DEM',sep=''))
@@ -54,15 +58,23 @@ setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',se
 #   t_srs=projection(tile_proj),ts=c(5000,5000),
 #   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
 #   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
-# 
-# slope <- terrain(DEM,opt='slope',unit='degrees')
-# aspect <- terrain(DEM,opt='aspect',unit='degrees')
-# 
-# src_data2 <- '/projectnb/modislc/data/lc_database/regional/united_states/NLCD2006_landcover_4-20-11_se5/nlcd2006_landcover_4-20-11_se5.img'
-# LC <- gdalwarp(src_data2,dstfile=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/NLCD/nlcd.tif',sep=''),
-#   t_srs=projection(tile_proj),ts=c(5000,5000),
-#   cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
-#   crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
+
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/SHP',sep=''))
+src_data2 <- '/projectnb/modislc/data/dem/usgs_ned/mosaic.tif'
+DEM <- gdalwarp(src_data2,
+  dstfile=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/DEM/mosaic_tile.tif',sep=''),
+  t_srs=projection(tile_proj),ts=c(5000,5000),
+  cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
+  crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
+
+slope <- terrain(DEM,opt='slope',unit='degrees')
+aspect <- terrain(DEM,opt='aspect',unit='degrees')
+
+src_data2 <- '/projectnb/modislc/data/lc_database/regional/united_states/NLCD2006_landcover_4-20-11_se5/nlcd2006_landcover_4-20-11_se5.img'
+LC <- gdalwarp(src_data2,dstfile=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/NLCD/nlcd.tif',sep=''),
+  t_srs=projection(tile_proj),ts=c(5000,5000),
+  cutline=paste(tile_name,'.shp',sep=''),cl=tile_name,
+  crop_to_cutline=TRUE,output_Raster=TRUE,overwrite=FALSE,verbose=TRUE)
 
 
 # LOAD IN SURFACE REFLECTANCE BANDS, QA LAYER, SOLAR ZENITH & AZIMUTH
