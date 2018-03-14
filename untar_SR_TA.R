@@ -5,7 +5,12 @@ library(doParallel)
 #Register the parallel backend
 registerDoParallel(16)
 
-setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/h23v14/')
+args = commandArgs(trailingOnly=T)
+tile_name <- args[1]
+
+#tile_name <- 'h21v10'
+
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,sep=''))
 
 dir.create(paste(getwd(),'/DEM/',sep=''))
 dir.create(paste(getwd(),'/IMG/',sep=''))

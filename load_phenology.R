@@ -1,7 +1,10 @@
 library(rgdal)
 library(raster)
 
-tile_name <- 'h20v14'
+#args = commandArgs(trailingOnly=T) 
+#tile_name = args[1]  
+
+tile_name <- 'h21v09'
 
 setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/IMG',sep=''))
 in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),
@@ -10,7 +13,7 @@ in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),
 img <- raster(paste(in_dirs[1],'/evi2.tif',sep=''))
 
 setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO',sep=''))
-tmp_files <- list.files(pattern = "evi2_phenology*", recursive = TRUE,full.names = TRUE)
+tmp_files <- list.files(pattern = "evi2_phenology_topo*", recursive = TRUE,full.names = TRUE)
 chunk <- unlist(lapply(tmp_files, 
   function(x) na.omit(as.numeric(unlist(strsplit(unlist(x), "[^0-9]+"))))[2]))
 
@@ -23,7 +26,7 @@ for (j in 1:length(tmp_files)){
   
   phen[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,1:4]
   
-  spr_anom[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,35]-all_pheno[,3]
+  spr_anom[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,40]-all_pheno[,3]
 }
 
 phen[phen<=0] <- NA
@@ -41,7 +44,7 @@ for (k in 1:4){
     tile_name,'/MAPS/',name,sep=""),format='GTiff',overwrite=TRUE)
 }
 
-names <- c('spr2012anom')
+names <- c('spr2017anom')
 for (k in 1:1){
   print(k)
   s <- setValues(img,spr_anom[,k])

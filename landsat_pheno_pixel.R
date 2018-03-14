@@ -1,6 +1,3 @@
-#This version includes 0.02 subtraction from ETM+ data according to DSM's findings
-
-
 ##########################################################################################
 #LANDSAT PHENOLOGY ALGORITHM RUN ON EACH PIXEL WITH SUFFICIENT NO. OF OBSERVATIONS
 
@@ -8,14 +5,8 @@
 #evi_ts - EVI time series
 #doy - Julian day of year
 #year - Year
-#sensor - Landat sensor (4,5(TM),7(ETM+))
 #prd - three-year period 
 #dYR - disturbance year 
-#pID - pixel ID
-#pLC - pixel land cover
-#pCDL - pixel cropland data layer
-#mID - MODIS panel ID
-#aID - AVHRR panel ID
 Landsat_Phenology <- function(evi_ts,doy,yr,prd,dYR){
   
   #normalized EVI threshold for long-term mean phenology date used to calculate annual phenology
@@ -40,14 +31,7 @@ Landsat_Phenology <- function(evi_ts,doy,yr,prd,dYR){
   
   info_spr <- NA
   info_aut <- NA
-  
-  #Process phenology dates for each pixel in EVI matrix
-  
-#   #Apply calibration adjustment for TM vs. ETM+ (subtract 0.02 from ETM+ observations)
-#   #Damien's analysis
-#   w <- which(sensor==7)
-#   evi_ts[w] <- (evi_ts[w]-0.019)/1.038
-  
+    
   #Set erroneous EVI values to NA
   EVI <- evi_ts
   EVI[EVI==-Inf | EVI==Inf]<-NA
@@ -214,7 +198,6 @@ Landsat_Phenology <- function(evi_ts,doy,yr,prd,dYR){
   
   if (is.character(pheno_matrix) == 1){
     pheno_matrix <- matrix(NA,1,76)
-    print(paste("Pixel ID",pID,"had an error!",sep=''))
   } 
   
   return(pheno_matrix)

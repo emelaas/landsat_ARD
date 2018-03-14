@@ -11,24 +11,23 @@ require(data.table)
 library(lubridate)
 
 #Register the parallel backend
-registerDoParallel(16)
+registerDoParallel(1)
 
 source(file='/usr3/graduate/emelaas/Code/GitHub/landsat_ARD/landsat_pheno_pixel.R')
 
 args = commandArgs(trailingOnly=T)
-chunk = as.numeric(args[1])
-#chunk <- 1
+tile_name <- args[1]
+chunk = as.numeric(args[2])
 
-H <- 20
-V <- 14
-tile_name <- paste('h',H,'v',V,sep='')
+#chunk <- 1
+#tile_name <- 'h25v15'
 
 #---------------------------------------------------------------------
 
 system.time({
   #Find all images for each site
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',sep=''))
-  in_dirs_tile <- list.files(path=getwd(),pattern=glob2rx("evi2.tif"),full.names=T,include.dirs=T,recursive=TRUE)
+  in_dirs_tile <- list.files(path=getwd(),pattern=glob2rx("evi2_topocorr.tif"),full.names=T,include.dirs=T,recursive=TRUE)
   
   r <- stack(in_dirs_tile)
   c <- crop(r,extent(r, 25*(chunk-1)+1, 25*(chunk), 1, 5000))
@@ -77,5 +76,5 @@ system.time({
   all_pheno[all_pheno==0] <- NA
   
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO',sep=''))
-  save(all_pheno,file=paste('evi2_phenology_',chunk,sep=""))
+  save(all_pheno,file=paste('evi2_phenology_topocorr_',chunk,sep=""))
 })
