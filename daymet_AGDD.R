@@ -26,8 +26,6 @@ o_reproj <- spTransform(o,daymet_crs)
 AGDD <- matrix(NA,nrow(obs.SPR),36)
 for (yr in 1982:2017){
 
-  print(yr)
-
   setwd('/projectnb/modislc/data/daymet')
   tmax <- brick(paste('daymet_v3_tmax_',yr,'_na.nc4',sep=''),var='tmax')
   tmin <- brick(paste('daymet_v3_tmin_',yr,'_na.nc4',sep=''),var='tmin')
