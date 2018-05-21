@@ -8,7 +8,7 @@ system.time({
 
   args = commandArgs(trailingOnly=T)
   tile_name = args[1]
-  #tile_name <- 'h19v05'
+  #tile_name <- 'h18v16'
 
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,sep=''))
   dir.create(paste(getwd(),'/PHENO_1KM/',sep=''))
@@ -21,7 +21,7 @@ system.time({
   #Import annual phenology dates
   lc <- raster(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
     tile_name,'/NLCD/nlcd.tif',sep=""))
-  w <- c(0,11,21,22,23,24,31,51,52,71,72,73,74,81,82,90,95)
+  w <- c(0,11,21,22,23,24,31,51,52,71,72,73,74,81,82,95)
 
   lc_vals <- getValues(lc)
   lc_vals[lc_vals>=-9999] <- NA
@@ -101,6 +101,6 @@ system.time({
   obs.SPR <- cbind(cells_vals,poly_medians)
 
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO_1KM/',sep=""))
-  save(cells.crop,obs.SPR,file = "landsat2daymet")
+  save(cells.crop,obs.SPR,file = "landsat2daymet_with_WL")
 
 })

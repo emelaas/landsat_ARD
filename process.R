@@ -20,7 +20,7 @@ source(file='/usr3/graduate/emelaas/Code/R/landsat_sentinel/v1_3/topocorr_v3.R')
 args = commandArgs(trailingOnly=T) 
 tile_name = args[1]  
 
-#tile_name <- 'h19v13'
+#tile_name <- 'h24v06'
 
 H <- as.numeric(substring(tile_name,2,3))
 V <- as.numeric(substring(tile_name,5,6))
@@ -81,7 +81,14 @@ setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/IMG'
 in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),
   full.names=T,include.dirs=T)
 
-all_count <- foreach(i = 1:length(in_dirs), .combine = rbind) %dopar% {
+# Check for images with missing evi outputs
+setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/',sep=''))
+in_dirs_tile <- list.files(path=getwd(),pattern=glob2rx("evi2_topocorr.tif"),full.names=T,include.dirs=T,recursive=TRUE)
+ydoy <- substring(in_dirs_tile,76,83)
+ydoy2 <- substring(in_dirs,76,83)
+w <- which(!(ydoy2 %in% ydoy))
+
+all_count <- foreach(i = w, .combine = rbind) %dopar% {
 
   # Landsat 8
   if (substr(in_dirs[i],64,64)==8){
@@ -123,6 +130,10 @@ all_count <- foreach(i = 1:length(in_dirs), .combine = rbind) %dopar% {
   writeRaster(evi2_map,filename=paste(in_dirs[i],'/evi2',sep=""),
     format='GTiff',overwrite=TRUE)
 
+  ndvi <- (band_vals[,2]/10000 - band_vals[,1]/10000)/(band_vals[,2]/10000 + band_vals[,1]/10000)
+  ndvi_map <- setValues(nir,round(ndvi*10000))
+  writeRaster(ndvi_map,filename=paste(in_dirs[i],'/ndvi',sep=""),
+    format='GTiff',overwrite=TRUE)
   
   # TOPOGRAPHIC CORRECTION 
   SAA <- 0.01*raster(paste(in_dirs[i],'/',substr(in_dirs[i],61,92),
@@ -158,6 +169,11 @@ all_count <- foreach(i = 1:length(in_dirs), .combine = rbind) %dopar% {
   evi2 <- 2.5*(b4_corr/10000 - b3_corr/10000)/(b4_corr/10000 + 2.4*b3_corr/10000 + 1)
   evi2_map <- setValues(nir,round(evi2*10000))
   writeRaster(evi2_map,filename=paste(in_dirs[i],'/evi2_topocorr',sep=""),
+    format='GTiff',overwrite=TRUE)
+  
+  ndvi <- (b4_corr/10000 - b3_corr/10000)/(b4_corr/10000 + b3_corr/10000)
+  ndvi_map <- setValues(nir,round(ndvi*10000))
+  writeRaster(ndvi_map,filename=paste(in_dirs[i],'/ndvi_topocorr',sep=""),
     format='GTiff',overwrite=TRUE)
 
   count <- i

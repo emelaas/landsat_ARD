@@ -11,7 +11,7 @@ require(data.table)
 library(lubridate)
 
 #Register the parallel backend
-registerDoParallel(1)
+registerDoParallel(8)
 
 source(file='/usr3/graduate/emelaas/Code/GitHub/landsat_ARD/landsat_pheno_pixel.R')
 
