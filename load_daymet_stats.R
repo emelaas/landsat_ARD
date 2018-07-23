@@ -2,9 +2,9 @@ library(ncdf4)
 require(rgdal)
 library(raster)
 
-# args = commandArgs(trailingOnly=T)
-# m = as.numeric(args[1])
-m <- 1
+args = commandArgs(trailingOnly=T) 
+m = as.numeric(args[1])
+#m <- 1
 
 usa_shp <- readOGR('/projectnb/modislc/users/emelaas/scratch32/DAYMET/USA_Boundary/states_21basic/states.dbf','states')
 usa_shp_proj <- spTransform(usa_shp, 
@@ -12,7 +12,7 @@ usa_shp_proj <- spTransform(usa_shp,
 usa_crop <- crop(usa_shp_proj,extent(194214,2426712,-1660235,946090))
 
 # Find all Daymet tiles overlapping with ARD tile
-setwd('/projectnb/modislc/data/daymet')
+setwd('/projectnb/modislc/data/climate/daymet')
 tmax <- raster('daymet_v3_tmax_1981_na.nc4',varname='tmax')
 cells <- setValues(tmax,seq(1,ncell(tmax)))
 
@@ -38,11 +38,12 @@ for (i in 1:172){
   load(file = "landsat2daymet")
   load(file = "below5_sum")
   load(file = "daymet_AGDD")
+  load(file = paste("daymet_predict_v5_",m,sep=""))
   load(file = paste("daymet_predict_",m,sep=""))
   
   nobs.pix[nobs.pix==0] <- NA
   
-  #o_sd <- apply(obs.SPR[,4:39],1,sd,na.rm=TRUE)
+  o_sd <- apply(obs.SPR[,4:39],1,sd,na.rm=TRUE)
   agdd_sd <- apply(all.AGDD,1,sd,na.rm=TRUE)
   #IQR <- apply(obs.SPR[,4:39],1,quantile,0.75,1,na.rm=TRUE)-apply(obs.SPR[,4:39],1,quantile,0.25,1,na.rm=TRUE)
   
@@ -70,8 +71,8 @@ for (i in 1:172){
   below5_sum[w2] <- below5_map[obs.SPR[w2,1]]
   below5_map[obs.SPR[,1]] <- below5_sum
   
-  #o_sd[w2] <- obsSD_map[obs.SPR[w2,1]]
-  #obsSD_map[obs.SPR[,1]] <- o_sd
+  o_sd[w2] <- obsSD_map[obs.SPR[w2,1]]
+  obsSD_map[obs.SPR[,1]] <- o_sd
   
   agdd_sd[w2] <- agddSD_map[obs.SPR[w2,1]]
   agddSD_map[obs.SPR[,1]] <- agdd_sd

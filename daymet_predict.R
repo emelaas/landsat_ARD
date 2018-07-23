@@ -17,7 +17,7 @@ system.time({
   #tile_name <- "h18v16"
 
   # Number of models tested
-  num_mod <- 4
+  num_mod <- 5
 
   # Initialize matrices for model performance stats
   mbe <- matrix(NA,num_mod,1)
@@ -49,7 +49,7 @@ system.time({
 
       print(yr)
 
-      setwd('/projectnb/modislc/data/daymet')
+      setwd('/projectnb/modislc/data/climate/daymet')
       tmax <- brick(paste('daymet_v3_tmax_',yr,'_na.nc4',sep=''),var='tmax')
       tmin <- brick(paste('daymet_v3_tmin_',yr,'_na.nc4',sep=''),var='tmin')
       dayl <- brick(paste('daymet_v3_dayl_',yr,'_na.nc4',sep=''),var='dayl')
@@ -64,8 +64,9 @@ system.time({
       # (AT_Jan1_5C) Alternating model with Jan 1 start date, 5C base temp
       # Parameters: a, b, c
       if (m == 1){
-        par <- rbind(c(0.85, 760.32, -0.017))
-
+        #par <- rbind(c(0.85, 760.32, -0.017))
+        par <- rbind(c(6.00, 797.53, -0.015))
+        
         R_f <- tmean - 5
         R_f[R_f < 0] <- 0
         S_f <- t(apply(R_f, 1, cumsum))
@@ -81,8 +82,9 @@ system.time({
         # (M1s_Jan1_5C) Photoperiod model with January 1 start date, 5C base temp
         # Parameters: EXP, F*
       } else if (m == 2){
-        par <- rbind(c(7.69, 1512.74))
-
+        #par <- rbind(c(7.69, 1512.74))
+        par <- rbind(c(6.19, 1383.35))
+        
         R_f <- tmean - 5
         R_f[R_f < 0] <- 0
         R_f <- R_f*(photo/10)^par[1]
@@ -94,7 +96,8 @@ system.time({
         # (TT_Jan1_5C) Thermal time model with January 1 start date, 5C base temp
         # Parameters: F*
       } else if (m == 3){
-        par <- rbind(c(212.21))
+        #par <- rbind(c(212.21))
+        par <- rbind(c(285.2155))
 
         R_f <- tmean - 5
         R_f[R_f < 0] <- 0
@@ -106,8 +109,9 @@ system.time({
         # (TT) Thermal time model with flexible start date/base temp
         # Parameters: t0, Tbase, F*
       } else if (m == 4){
-        par <- rbind(c(73, -3.17, 487.95))
-
+        #par <- rbind(c(73, -3.17, 487.95))
+        par <- rbind(c(76, -1.22, 472.58))
+        
         R_f <- tmean - par[2]
         R_f[R_f < 0] <- 0
         R_f[,1:par[1]] <- 0
@@ -115,6 +119,23 @@ system.time({
         diff <- abs(S_f - par[3])
 
         pSPR <- as.numeric(apply(diff, 1, which.min))
+      
+        # Melaas et al. 2016 GCB PhenoCam model 
+      } else if (m == 5){
+        par <- rbind(c(73,-5.7,24, 532, -0.006))
+        
+        R_f <- tmean - par[2]
+        R_f[R_f < 0] <- 0
+        R_f[,1:par[1]] <- 0
+        S_f <- t(apply(R_f, 1, cumsum))
+        
+        R_c <- tmean - 5
+        R_c[R_c >= 0] <- 0
+        R_c[R_c < 0] <- 1
+        S_c <- t(apply(R_c, 1, cumsum))
+        
+        diff <- abs(S_f - (par[3] + par[4] * exp(par[5] * S_c)))
+        pSPR <- as.numeric(apply(diff, 1, which.min))    
       }
     }
 
@@ -124,9 +145,9 @@ system.time({
     assign('all.oSPR',obs.SPR[,4:39])
 
     setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO_1KM/',sep=""))
-    save(all.oSPR,all.pSPR,file = paste("daymet_predict_",m,sep=""))
+    save(all.oSPR,all.pSPR,file = paste("daymet_predict_v5_",m,sep=""))
 
-    load(paste("daymet_predict_",m,sep=""))
+    load(paste("daymet_predict_v5_",m,sep=""))
     load('daymet_AGDD')
 
     #Calculate statistics for anomalously early observations
@@ -182,5 +203,5 @@ system.time({
       file = paste("daymet_predict_",m,sep=""))
   }
 
-  save(good.pix,rmse,mbe,cor,file = "daymet2landsat_pcam_s50_scene_stats_v4")
+  save(good.pix,rmse,mbe,cor,file = "daymet2landsat_pcam_s50_scene_stats_v5")
 })

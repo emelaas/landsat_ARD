@@ -1,10 +1,10 @@
 library(rgdal)
 library(raster)
 
-args = commandArgs(trailingOnly=T)
-tile_name = args[1]
+#args = commandArgs(trailingOnly=T)
+#tile_name = args[1]
 
-tile_name <- 'h18v04'
+tile_name <- 'h29v04'
 
 setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/IMG',sep=''))
 in_dirs <- list.files(path=getwd(),pattern=glob2rx("L*"),

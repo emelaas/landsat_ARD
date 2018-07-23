@@ -8,7 +8,7 @@ year = as.numeric(args[1])
 print(year)
 
 # Find all Daymet tiles overlapping with ARD tile
-setwd('/projectnb/modislc/data/daymet')
+setwd('/projectnb/modislc/data/climate/daymet')
 tmax <- raster('daymet_v3_tmax_1981_na.nc4',varname='tmax')
 cells <- setValues(tmax,seq(1,ncell(tmax)))
 
@@ -19,7 +19,7 @@ usa_crop <- crop(usa_shp_proj,extent(194214,2426712,-1660235,946090))
 
 tiles <- read.table('~/Code/GitHub/ard_tiles.txt')
 
-for (m in 1:1){
+for (m in 1:4){
 
   tmp <- matrix(NA,ncell(cells),1)
   tmp2 <- matrix(NA,ncell(cells),1)
@@ -33,7 +33,7 @@ for (m in 1:1){
     setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
       tile_name,'/PHENO_1KM/',sep=''))
     load(file = "daymet_AGDD")
-    load(file = paste("daymet_predict_",m,sep=""))
+    load(file = paste("daymet_predict_v5_",m,sep=""))
     load(file = "landsat2daymet")
     all.oSPR <- obs.SPR[,4:39]
 

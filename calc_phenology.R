@@ -13,6 +13,7 @@ library(lubridate)
 #Register the parallel backend
 registerDoParallel(8)
 
+# Calls Landsat Phenology Algorithm
 source(file='/usr3/graduate/emelaas/Code/GitHub/landsat_ARD/landsat_pheno_pixel.R')
 
 args = commandArgs(trailingOnly=T)
