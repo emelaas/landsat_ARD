@@ -2,9 +2,9 @@ library(ncdf4)
 require(rgdal)
 library(raster)
 
-args = commandArgs(trailingOnly=T) 
-m = as.numeric(args[1])
-#m <- 1
+#args = commandArgs(trailingOnly=T) 
+#m = as.numeric(args[1])
+m <- 6
 
 usa_shp <- readOGR('/projectnb/modislc/users/emelaas/scratch32/DAYMET/USA_Boundary/states_21basic/states.dbf','states')
 usa_shp_proj <- spTransform(usa_shp, 
@@ -17,22 +17,25 @@ tmax <- raster('daymet_v3_tmax_1981_na.nc4',varname='tmax')
 cells <- setValues(tmax,seq(1,ncell(tmax)))
 
 tiles <- read.table('~/Code/GitHub/ard_tiles.txt')
+tiles <- as.character(as.matrix(droplevels(tiles)))
 
 rmse_map <- matrix(NA,ncell(cells),1)
 mbe_map <- matrix(NA,ncell(cells),1)
 cor_map <- matrix(NA,ncell(cells),1)
+pval_map <- matrix(NA,ncell(cells),1)
 slope_map <- matrix(NA,ncell(cells),1)
+slope_sig_map <- matrix(NA,ncell(cells),1)
 rmse_2sd_map <- matrix(NA,ncell(cells),1)
 nobs_map <- matrix(NA,ncell(cells),1)
 below5_map <- matrix(NA,ncell(cells),1)
 obsSD_map <- matrix(NA,ncell(cells),1)
 agddSD_map <- matrix(NA,ncell(cells),1)
 IQR_map <- matrix(NA,ncell(cells),1)
-for (i in 1:172){
+for (i in 1:170){
 
   print(c(i,m))
   
-  tile_name <- tiles[i,1]
+  tile_name <- tiles[i]
   
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO_1KM/',sep=''))
   load(file = "landsat2daymet")
@@ -59,8 +62,14 @@ for (i in 1:172){
   cor.pix[w2,1] <- cor_map[obs.SPR[w2,1]]
   cor_map[obs.SPR[,1]] <- cor.pix[,1]
   
+  cor.pix[w2,2] <- pval_map[obs.SPR[w2,1]]
+  pval_map[obs.SPR[,1]] <- cor.pix[,2]
+  
   slope.pix[w2,1] <- slope_map[obs.SPR[w2,1]]
   slope_map[obs.SPR[,1]] <- slope.pix
+  
+  slope_sig.pix[w2,1] <- slope_sig_map[obs.SPR[w2,1]]
+  slope_sig_map[obs.SPR[,1]] <- slope_sig.pix
   
   rmse_2sd.pix[w2,1] <- rmse_2sd_map[obs.SPR[w2,1]]
   rmse_2sd_map[obs.SPR[,1]] <- rmse_2sd.pix
@@ -76,16 +85,15 @@ for (i in 1:172){
   
   agdd_sd[w2] <- agddSD_map[obs.SPR[w2,1]]
   agddSD_map[obs.SPR[,1]] <- agdd_sd
-  
-  #IQR[w2] <- IQR_map[obs.SPR[w2,1]]
-  #IQR_map[obs.SPR[,1]] <- IQR
 }
 
 sidelaps <- raster('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/sidelap_mask.tif')
+sprLTM <- raster('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/sprLTM.tif')
 
 rmse_mod <- setValues(cells,rmse_map)
 rmse_mod <- crop(rmse_mod,usa_crop)
 rmse_mod[sidelaps==0] <- NA
+rmse_mod[is.na(sprLTM)==1] <- NA
 writeRaster(rmse_mod,
   filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/RMSE',m,sep=""),
   format='GTiff',overwrite=TRUE)
@@ -93,6 +101,7 @@ writeRaster(rmse_mod,
 mbe_mod <- setValues(cells,mbe_map)
 mbe_mod <- crop(mbe_mod,usa_crop)
 mbe_mod[sidelaps==0] <- NA
+mbe_mod[is.na(sprLTM)==1] <- NA
 writeRaster(mbe_mod,
   filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/mbe',m,sep=""),
   format='GTiff',overwrite=TRUE)
@@ -100,55 +109,71 @@ writeRaster(mbe_mod,
 cor_mod <- setValues(cells,cor_map)
 cor_mod <- crop(cor_mod,usa_crop)
 cor_mod[sidelaps==0] <- NA
+cor_mod[is.na(sprLTM)==1] <- NA
 writeRaster(cor_mod,
   filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/cor',m,sep=""),
+  format='GTiff',overwrite=TRUE)
+
+pval_mod <- setValues(cells,pval_map)
+pval_mod <- crop(pval_mod,usa_crop)
+pval_mod[sidelaps==0] <- NA
+pval_mod[is.na(sprLTM)==1] <- NA
+writeRaster(pval_mod,
+  filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/pval',m,sep=""),
   format='GTiff',overwrite=TRUE)
 
 slope_mod <- setValues(cells,slope_map)
 slope_mod <- crop(slope_mod,usa_crop)
 slope_mod[sidelaps==0] <- NA
+slope_mod[is.na(sprLTM)==1] <- NA
 writeRaster(slope_mod,
   filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/slope',m,sep=""),
+  format='GTiff',overwrite=TRUE)
+
+slope_sig_mod <- setValues(cells,slope_sig_map)
+slope_sig_mod <- crop(slope_sig_mod,usa_crop)
+slope_sig_mod[sidelaps==0] <- NA
+slope_sig_mod[is.na(sprLTM)==1] <- NA
+writeRaster(slope_sig_mod,
+  filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/slope_sig',m,sep=""),
   format='GTiff',overwrite=TRUE)
 
 rmse_2sd_mod <- setValues(cells,rmse_2sd_map)
 rmse_2sd_mod <- crop(rmse_2sd_mod,usa_crop)
 rmse_2sd_mod[sidelaps==0] <- NA
+rmse_2sd_mod[is.na(sprLTM)==1] <- NA
 writeRaster(rmse_2sd_mod,
   filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/rmse_2sd_',m,sep=""),
   format='GTiff',overwrite=TRUE)
 
-nobs_mod <- setValues(cells,nobs_map)
-nobs_mod <- crop(nobs_mod,usa_crop)
-nobs_mod[sidelaps==0] <- NA
-writeRaster(nobs_mod,
-  filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/nobs',
-  format='GTiff',overwrite=TRUE)
-
-below5_mod <- setValues(cells,below5_map)
-below5_mod <- crop(below5_mod,usa_crop)
-below5_mod[sidelaps==0] <- NA
-writeRaster(below5_mod,
-  filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/below5_sum',
-  format='GTiff',overwrite=TRUE)
-
-obsSD_mod <- setValues(cells,obsSD_map)
-obsSD_mod <- crop(obsSD_mod,usa_crop)
-obsSD_mod[sidelaps==0] <- NA
-writeRaster(obsSD_mod,
-  filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/obsSD',
-  format='GTiff',overwrite=TRUE)
-
-agddSD_mod <- setValues(cells,agddSD_map)
-agddSD_mod <- crop(agddSD_mod,usa_crop)
-agddSD_mod[sidelaps==0] <- NA
-writeRaster(agddSD_mod,
-  filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/agddSD',
-  format='GTiff',overwrite=TRUE)
-
-# IQR_mod <- setValues(cells,IQR_map)
-# IQR_mod <- crop(IQR_mod,usa_crop)
-# IQR_mod[sidelaps==0] <- NA
-# writeRaster(IQR_mod,
-#   filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/IQR_25_75',
+# nobs_mod <- setValues(cells,nobs_map)
+# nobs_mod <- crop(nobs_mod,usa_crop)
+# nobs_mod[sidelaps==0] <- NA
+# nobs_mod[is.na(sprLTM)==1] <- NA
+# writeRaster(nobs_mod,
+#   filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/nobs',
+#   format='GTiff',overwrite=TRUE)
+# 
+# below5_mod <- setValues(cells,below5_map)
+# below5_mod <- crop(below5_mod,usa_crop)
+# below5_mod[sidelaps==0] <- NA
+# below5_mod[is.na(sprLTM)==1] <- NA
+# writeRaster(below5_mod,
+#   filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/below5_sum',
+#   format='GTiff',overwrite=TRUE)
+# 
+# obsSD_mod <- setValues(cells,obsSD_map)
+# obsSD_mod <- crop(obsSD_mod,usa_crop)
+# obsSD_mod[sidelaps==0] <- NA
+# obsSD_mod[is.na(sprLTM)==1] <- NA
+# writeRaster(obsSD_mod,
+#   filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/obsSD',
+#   format='GTiff',overwrite=TRUE)
+# 
+# agddSD_mod <- setValues(cells,agddSD_map)
+# agddSD_mod <- crop(agddSD_mod,usa_crop)
+# agddSD_mod[sidelaps==0] <- NA
+# agddSD_mod[is.na(sprLTM)==1] <- NA
+# writeRaster(agddSD_mod,
+#   filename='/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/agddSD',
 #   format='GTiff',overwrite=TRUE)

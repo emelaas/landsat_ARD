@@ -18,7 +18,7 @@ my.colors4 = colorRampPalette(c("firebrick4","orangered","orange","white",
   "cyan","deepskyblue","deepskyblue4"))
 my.colors5 = colorRampPalette(c("red","white","blue"))
 
-models <- c('Chill','Photo','SW Jan 1','SW Mar 17')
+models <- c('Chill','Photo','SW Mar 17','SW Jan 1 (Mean AGDD)')
 colors <- c('royalblue','springgreen','hotpink','orange')
 
 sidelaps <- raster('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs/sidelap_mask.tif')
@@ -59,7 +59,7 @@ in_dirs_tile <- list.files(path=getwd(),
   pattern=glob2rx("RMSE*tif"),full.names=T,include.dirs=T,recursive=TRUE)
 s <- stack(in_dirs_tile[])
 s_vals <- getValues(s)
-s_vals[s_vals>21] <- 21
+s_vals[s_vals>14] <- 14
 s_vals[w,] <- NA
 s <- setValues(s,s_vals)
 #x11(h=7,w=7)
@@ -83,13 +83,13 @@ for (i in 1:4){
 }
 #x11(h=5,w=8)
 pdf(h=5,w=8,'/projectnb/modislc/projects/landsat_sentinel/ARD/figures/NCC/rmse_by_Tavg.pdf')
-barCenters <- barplot(t(rmse.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,30),
+barCenters <- barplot(t(rmse.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,14),
   col=colors, ylab='RMSE (days)',xlab=expression('Months with T'[avg]*' < 5'~degree*'C'))
 segments(barCenters, t(rmse.group)-t(rmse.error.group), barCenters,
   t(rmse.group)+t(rmse.error.group), lwd=1.5)
-legend('topright',legend=models,
+legend('topleft',legend=models,
   cex=0.8,fill=colors,
-  ncol=2)
+  ncol=1)
 dev.off()
 
 # Correlation Coefficient
@@ -121,37 +121,16 @@ for (i in 1:4){
 }
 #x11(h=5,w=8)
 pdf(h=5,w=8,'/projectnb/modislc/projects/landsat_sentinel/ARD/figures/NCC/cor_by_Tavg.pdf')
-barCenters <- barplot(t(rmse.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,1),
+barCenters <- barplot(t(cor.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,1),
   col=colors, ylab='Correlation Coefficient',xlab=expression('Months with T'[avg]*' < 5'~degree*'C'))
-segments(barCenters, t(rmse.group)-t(rmse.error.group), barCenters,
-  t(rmse.group)+t(rmse.error.group), lwd=1.5)
+segments(barCenters, t(cor.group)-t(cor.error.group), barCenters,
+  t(cor.group)+t(cor.error.group), lwd=1.5)
 legend('topright',legend=models,
   cex=0.8,fill=colors,
-  ncol=2)
+  ncol=3)
 dev.off()
 
 # RMA Slope
-in_dirs_tile <- list.files(path=getwd(),
-  pattern=glob2rx("slope*tif"),full.names=T,include.dirs=T,recursive=TRUE)
-s <- stack(in_dirs_tile)
-s_vals <- getValues(s)
-s_vals[s_vals<0] <- 0 
-s_vals[s_vals>2] <- 2
-s_vals[w,] <- NA
-s <- setValues(s,s_vals)
-#x11(h=7,w=7)
-pdf(h=7,w=7,'/projectnb/modislc/projects/landsat_sentinel/ARD/figures/NCC/slope.pdf')
-par(mfrow=c(2,2),mar=c(2,0,1,0))
-for (i in 1:4){
-  plot(usa_crop,col='white',main=models[i])
-  rect(194214,-1660235,2426712,946090,col='lightblue')
-  plot(usa_crop,col='gray50',add=TRUE,lwd=0.5)
-  plot(can_crop,col='gray50',add=TRUE,lwd=0.5)
-  if (i==1) plot(s[[i]],col=my.colors3(150),axes=FALSE,add=TRUE,zlim=c(0,2))
-  if (i!=1) plot(s[[i]],col=my.colors3(150),axes=FALSE,add=TRUE,legend=FALSE,zlim=c(0,2))
-}
-dev.off()
-
 slope.group <- matrix(NA,9,4)
 slope.error.group <- matrix(NA,9,4)
 for (i in 1:4){
@@ -160,13 +139,13 @@ for (i in 1:4){
 }
 #x11(h=5,w=8)
 pdf(h=5,w=8,'/projectnb/modislc/projects/landsat_sentinel/ARD/figures/NCC/slope_by_Tavg.pdf')
-barCenters <- barplot(t(rmse.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,2),
+barCenters <- barplot(t(slope.group),beside=TRUE,names=c(0,1,2,3,4,5,6,7,8),ylim=c(0,2),
   col=colors, ylab='RMA Slope',xlab=expression('Months with T'[avg]*' < 5'~degree*'C'))
-segments(barCenters, t(rmse.group)-t(rmse.error.group), barCenters,
-  t(rmse.group)+t(rmse.error.group), lwd=1.5)
+segments(barCenters, t(slope.group)-t(slope.error.group), barCenters,
+  t(slope.group)+t(slope.error.group), lwd=1.5)
 legend('topright',legend=models,
   cex=0.8,fill=colors,
-  ncol=4)
+  ncol=1)
 dev.off()
 
 # Mean Bias Error
@@ -174,8 +153,8 @@ in_dirs_tile <- list.files(path=getwd(),
   pattern=glob2rx("mbe*tif"),full.names=T,include.dirs=T,recursive=TRUE)
 s <- stack(in_dirs_tile)
 s_vals <- getValues(s)
-s_vals[s_vals < -21] <- -21 
-s_vals[s_vals > 21] <- 21
+s_vals[s_vals < -14] <- -14
+s_vals[s_vals > 14] <- 14
 s_vals[w,] <- NA
 s <- setValues(s,s_vals)
 #x11(h=7,w=7)
@@ -197,7 +176,7 @@ in_dirs_tile <- list.files(path=getwd(),
   pattern=glob2rx("rmse_2sd*tif"),full.names=T,include.dirs=T,recursive=TRUE)
 s <- stack(in_dirs_tile)
 s_vals <- getValues(s)
-s_vals[s_vals>21] <- 21
+s_vals[s_vals>14] <- 14
 s_vals[w,] <- NA
 s <- setValues(s,s_vals)
 #x11(h=7,w=7)
@@ -227,7 +206,7 @@ segments(barCenters, t(rmse.group)-t(rmse.error.group), barCenters,
   t(rmse.group)+t(rmse.error.group), lwd=1.5)
 legend('topright',legend=models,
   cex=0.8,fill=colors,
-  ncol=4)
+  ncol=1)
 dev.off()
 
 

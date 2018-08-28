@@ -39,7 +39,7 @@ system.time({
   chunk <- unlist(lapply(tmp_files,
     function(x) na.omit(as.numeric(unlist(strsplit(unlist(x), "[^0-9]+"))))[2]))
 
-  phen_spr <- matrix(NA,ncell(lc),38)
+  phen_aut <- matrix(NA,ncell(lc),38)
   
   rsmooth <- matrix(NA,ncell(lc),1)
 
@@ -47,19 +47,19 @@ system.time({
     print(j)
     load(tmp_files[j])
 
-    phen_spr[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,3:40]
+    phen_aut[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,c(3:4,41:76)]
     rsmooth[(25*5000*(chunk[j]-1)+1):((25*5000)*chunk[j]),] <- all_pheno[,2]
   }
 
-  phen_spr[which(getValues(lc) %in% w),] <- NA
-  phen_spr[which(rsmooth<0.9),] <- NA
-  phen_spr_hdr <- setValues(lc_stack,phen_spr)
+  phen_aut[which(getValues(lc) %in% w),] <- NA
+  phen_aut[which(rsmooth<0.9),] <- NA
+  phen_aut_hdr <- setValues(lc_stack,phen_aut)
 
-  writeRaster(phen_spr_hdr[[1]],filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
-    tile_name,'/MAPS/spr_mask',sep=""),format='GTiff',overwrite=TRUE)
+  writeRaster(phen_aut_hdr[[1]],filename=paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',
+    tile_name,'/MAPS/aut_mask',sep=""),format='GTiff',overwrite=TRUE)
 
   # Find all Daymet tiles overlapping with ARD tile
-  setwd('/projectnb/modislc/data/daymet')
+  setwd('/projectnb/modislc/data/climate/daymet')
   tmax <- raster('daymet_v3_tmax_1981_na.nc4',varname='tmax')
   cells <- setValues(tmax,seq(1,ncell(tmax)))
 
@@ -85,7 +85,7 @@ system.time({
     print(j)
 
     tmp_poly_subset <- tmp_poly_proj[j, ]
-    poly <- extract(phen_spr_hdr,tmp_poly_subset)
+    poly <- extract(phen_aut_hdr,tmp_poly_subset)
     poly_mat <- poly[[1]]
 
     if (ncell(poly_mat)>1){
@@ -99,9 +99,9 @@ system.time({
 
   }
 
-  obs.SPR <- cbind(cells_vals,poly_medians)
+  obs.AUT <- cbind(cells_vals,poly_medians)
 
   setwd(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/',tile_name,'/PHENO_1KM/',sep=""))
-  save(cells.crop,obs.SPR,file = "landsat2daymet")
+  save(cells.crop,obs.AUT,file = "landsat2daymet_aut")
 
 })

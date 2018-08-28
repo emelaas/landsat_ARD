@@ -22,8 +22,23 @@ for (year in 1984:2017){
   all_yrs[(year-1983)] <- in_dirs_tile[1]
 }
 
+setwd('/projectnb/modislc/projects/landsat_sentinel/ARD/tifs')
+all_yrs_Zscore <- as.character(matrix(NA,34,1))
+for (year in 1984:2017){
+  in_dirs_tile <- list.files(path=getwd(),
+    pattern=glob2rx(paste("agdd_Zscore*",year,"*tif",sep="")),
+    full.names=T,include.dirs=T,recursive=TRUE)
+  all_yrs_Zscore[(year-1983)] <- in_dirs_tile[1]
+}
+
+sprLTM <- raster('sprLTM.tif')
+ltm_vals <- getValues(sprLTM)
+
 all_yrs_stack <- stack(all_yrs)
 all_yrs_vals <- getValues(all_yrs_stack)
+
+all_yrs_Zscore_stack <- stack(all_yrs_Zscore)
+all_yrs_Zscore_vals <- getValues(all_yrs_Zscore_stack)
 
 all_yrs_vals[is.na(all_yrs_vals) == 1] <- 9999
 all_yrs_vals <- -1*all_yrs_vals
@@ -36,6 +51,13 @@ count_sum <- rowSums(count)
 
 early_yr[count_sum>=30] <- NA
 early_yr_map <- setValues(all_yrs_stack[[1]],early_yr)
+
+all_yrs_vals <- getValues(all_yrs_stack)
+anom_vals <- all_yrs_vals
+for (i in 1:34){
+  print(i)
+  anom_vals[,i] <- ltm_vals-all_yrs_vals[,i]
+}
 
 for (i in 1984:2017){
   jpeg(paste('/projectnb/modislc/projects/landsat_sentinel/ARD/figures/early_yr/early_',i,'.jpeg',sep=''))
